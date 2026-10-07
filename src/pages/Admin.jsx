@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../lib/auth';
-import { slugify, uploadImage } from '../lib/api';
+import { slugify } from '../lib/api';
 import {
   adminDeleteBlog,
   adminDeleteUpcoming,
@@ -35,35 +35,14 @@ function Field({ label, children }) {
 }
 
 function ImageInput({ value, onChange }) {
-  const fileRef = useRef(null);
-  const [uploading, setUploading] = useState(false);
-
-  const onFile = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    setUploading(true);
-    try {
-      onChange(await uploadImage(file));
-    } catch {
-      window.alert('Upload failed. You can paste an image URL instead.');
-    } finally {
-      setUploading(false);
-    }
-  };
-
   return (
     <div className="image-input">
       <input
         type="url"
-        placeholder="https://… or upload"
+        placeholder="https://…"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
-      <button type="button" className="btn-secondary" onClick={() => fileRef.current?.click()} disabled={uploading}>
-        {uploading ? 'Uploading…' : 'Upload'}
-      </button>
-      <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
       {value ? <img className="image-preview" src={value} alt="preview" /> : null}
     </div>
   );
@@ -188,7 +167,7 @@ function Admin() {
   };
 
   const purgeUpcoming = async (id) => {
-    if (!window.confirm('PERMANENTLY delete this project? This cannot be undone. Uploaded media files are kept and must be removed manually.')) return;
+    if (!window.confirm('PERMANENTLY delete this project? This cannot be undone.')) return;
     await adminDeleteUpcoming(id, true);
     await reload();
     flash('Permanently deleted.');
@@ -245,7 +224,7 @@ function Admin() {
   };
 
   const purgeBlog = async (id) => {
-    if (!window.confirm('PERMANENTLY delete this post? This cannot be undone. Uploaded media files are kept and must be removed manually.')) return;
+    if (!window.confirm('PERMANENTLY delete this post? This cannot be undone.')) return;
     await adminDeleteBlog(id, true);
     await reload();
     flash('Permanently deleted.');

@@ -75,15 +75,6 @@ async function req(path, options = {}) {
   return data;
 }
 
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result);
-    r.onerror = reject;
-    r.readAsDataURL(file);
-  });
-}
-
 /* ---------- public reads ---------- */
 export async function fetchUpcoming() {
   try {
@@ -254,27 +245,4 @@ export async function adminRestoreBlog(idOrSlug) {
   );
   saveStore(s);
   return true;
-}
-
-export async function uploadImage(file) {
-  try {
-    const res = await fetch('/api/admin/uploads', {
-      method: 'POST',
-      headers: { 'content-type': file.type || 'application/octet-stream' },
-      body: file,
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const err = new Error(data.error || 'Upload failed');
-      err.status = res.status;
-      throw err;
-    }
-    return data.url;
-  } catch (err) {
-    // Auth/validation errors are authoritative everywhere; anything else falls
-    // back to an inline data URL in dev only (never production).
-    if (PROD || (err.status !== 0 && err.status !== 500 && err.status !== 404)) throw err;
-    if (err.status === 401 || err.status === 403) throw err;
-    return fileToDataUrl(file);
-  }
 }

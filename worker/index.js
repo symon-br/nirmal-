@@ -1,9 +1,9 @@
-/* Cloudflare Worker (single deployment): serves the SPA frontend (./dist) + JSON API (D1 + R2).
- * Public reads:  GET /api/upcoming, /api/blogs, /api/blogs/:slug, /api/media/:key
- * Admin (ALL methods incl. GET list/detail, POST, PUT, PATCH, DELETE, uploads):
+/* Cloudflare Worker (single deployment): serves the SPA frontend (./dist) + JSON API (D1).
+ * Public reads:  GET /api/upcoming, /api/blogs, /api/blogs/:slug
+ * Admin (ALL methods incl. GET list/detail, POST, PUT, PATCH, DELETE):
  *   /api/admin/* — requires a valid Cloudflare Access JWT, verified server-side
  *   (signature via Access JWKS, issuer, audience, expiry) + ADMIN_EMAILS allowlist.
- * All rich-text HTML is sanitized server-side before storage; URLs and uploads validated.
+ * All rich-text HTML is sanitized server-side; user-controlled URLs are validated.
  * Protect /admin* and /api/admin/* with a Cloudflare Access application in Zero Trust.
  */
 
@@ -313,7 +313,7 @@ function hasValidOrigin(request) {
  * Limits are generous for normal admin use. */
 const RL_BUCKETS = new Map();
 function checkRateLimit(request, kind) {
-  const limits = { admin_mutation: [120, 60], upload: [30, 60], api: [600, 60] };
+  const limits = { admin_mutation: [120, 60], api: [600, 60] };
   const [max, windowSec] = limits[kind] || limits.api;
   const fwd = request.headers.get('X-Forwarded-For');
   const ip =
@@ -562,10 +562,7 @@ async function upsertBlog(request, env, idOrSlug, isPatch) {
 }
 
 /* Soft-delete: DELETE moves rows to trash (recoverable). Permanent deletion
- * requires ?permanent=1 and is only for explicit "delete forever" actions.
- * Associated R2 media is NEVER auto-deleted: the API cannot know which other
- * rows or pages reference an object, so media cleanup is a deliberate manual
- * step in the Cloudflare dashboard. */
+ * requires ?permanent=1 and is only for explicit "delete forever" actions. */
 async function softDelete(env, table, idOrSlug) {
   const ts = now();
   if (table === 'blog_posts') {
@@ -614,40 +611,6 @@ async function hardDelete(env, table, idOrSlug) {
   return (r.meta?.changes || 0) > 0;
 }
 
-/* Detect image type from magic bytes — never trust the claimed Content-Type. */
-function detectImage(buf) {
-  const b = new Uint8Array(buf);
-  if (b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg';
-  if (b.length > 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return 'image/png';
-  if (b.length > 4 && b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x38) return 'image/gif';
-  if (
-    b.length > 12 && b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
-    b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50
-  ) return 'image/webp';
-  if (b.length > 12 && b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70) return 'image/avif';
-  return null;
-}
-
-async function handleUpload(request, env) {
-  if (!env.MEDIA) return json({ error: 'Media storage not configured' }, 500);
-  const buf = await request.arrayBuffer().catch(() => null);
-  if (!buf || !buf.byteLength) return json({ error: 'Empty file' }, 400);
-  if (buf.byteLength > 8 * 1024 * 1024) return json({ error: 'File too large (8MB max)' }, 413);
-  const detected = detectImage(buf);
-  if (!detected) return json({ error: 'Only JPEG, PNG, GIF, WebP or AVIF images are allowed' }, 415);
-  const claimed = (request.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
-  if (claimed && claimed !== 'application/octet-stream' && claimed !== detected) {
-    return json({ error: `Content-Type mismatch (detected ${detected})` }, 415);
-  }
-  // Server-generated key: date prefix + random id + verified extension. No user input.
-  const ext = detected === 'image/jpeg' ? 'jpg' : detected.split('/')[1];
-  const d = new Date();
-  const ym = `${d.getUTCFullYear()}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
-  const key = `uploads/${ym}/${Date.now()}-${uid().slice(0, 8)}.${ext}`;
-  await env.MEDIA.put(key, buf, { httpMetadata: { contentType: detected } });
-  return json({ key, url: `/api/media/${key}` }, 201);
-}
-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -662,24 +625,8 @@ export default {
         return json({ email: email || null, access_configured: configured(env) });
       }
 
-      if (pathname.startsWith('/api/media/')) {
-        const key = decodeURIComponent(pathname.slice('/api/media/'.length));
-        // Keys are server-generated under uploads/ — reject anything else.
-        if (!key || key.includes('..') || !key.startsWith('uploads/')) {
-          return json({ error: 'Bad key' }, 400);
-        }
-        const obj = await env.MEDIA?.get(key);
-        if (!obj) return new Response('Not found', { status: 404 });
-        return new Response(obj.body, {
-          headers: {
-            'content-type': obj.httpMetadata?.contentType || 'application/octet-stream',
-            'cache-control': 'public, max-age=31536000, immutable',
-          },
-        });
-      }
-
       if (pathname.startsWith('/api/')) {
-        if (!env.DB && !pathname.startsWith('/api/admin/uploads')) {
+        if (!env.DB) {
           return json({ error: 'Service unavailable' }, 500);
         }
         await ensureTables(env.DB);
@@ -691,7 +638,7 @@ export default {
           return handleBlogBySlug(decodeURIComponent(pathname.slice('/api/blogs/'.length)), env);
 
         if (pathname.startsWith('/api/admin/')) {
-          // Every admin endpoint (GET/POST/PUT/PATCH/DELETE/upload) requires
+          // Every admin endpoint (GET/POST/PUT/PATCH/DELETE) requires
           // a verified Cloudflare Access identity — reads included, because
           // admin list views expose drafts and trashed items.
           let email;
@@ -707,13 +654,11 @@ export default {
           if (isMutation && !hasValidOrigin(request)) {
             return json({ error: 'Forbidden origin' }, 403);
           }
-          // Rate limits: uploads strictest, then mutations, then reads.
-          const rlKind =
-            pathname === '/api/admin/uploads' ? 'upload' : isMutation ? 'admin_mutation' : 'api';
+          // Rate limits: mutations stricter, then reads.
+          const rlKind = isMutation ? 'admin_mutation' : 'api';
           const limited = checkRateLimit(request, rlKind);
           if (limited) return limited;
 
-          if (pathname === '/api/admin/uploads' && method === 'POST') return handleUpload(request, env);
           if (pathname === '/api/admin/upcoming' && method === 'GET') {
             return handleAdminUpcomingList(url, env);
           }
@@ -732,7 +677,7 @@ export default {
             }
             if (method === 'DELETE') {
               // Default is recoverable soft-delete; ?permanent=1 hard-deletes
-              // (admin UI confirms explicitly). Media is never auto-deleted.
+              // (admin UI confirms explicitly).
               if (url.searchParams.get('permanent') === '1') {
                 const gone = await hardDelete(env, 'upcoming_projects', id);
                 if (!gone) return json({ error: 'Not found' }, 404);

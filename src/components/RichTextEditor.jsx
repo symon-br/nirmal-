@@ -1,11 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import { uploadImage } from '../lib/api';
+import { useEffect, useRef } from 'react';
 import './RichTextEditor.css';
 
 function RichTextEditor({ value, onChange, placeholder }) {
   const editorRef = useRef(null);
-  const fileRef = useRef(null);
-  const [uploading, setUploading] = useState(false);
   const lastValue = useRef(value || '');
 
   useEffect(() => {
@@ -32,23 +29,12 @@ function RichTextEditor({ value, onChange, placeholder }) {
     if (href) exec('createLink', href);
   };
 
-  const addImage = () => fileRef.current?.click();
-
-  const onFile = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    setUploading(true);
-    try {
-      const url = await uploadImage(file);
-      editorRef.current?.focus();
-      document.execCommand('insertImage', false, url);
-      emit();
-    } catch {
-      window.alert('Image upload failed.');
-    } finally {
-      setUploading(false);
-    }
+  const addImageUrl = () => {
+    const url = window.prompt('Image URL (https://… or /path)');
+    if (!url) return;
+    editorRef.current?.focus();
+    document.execCommand('insertImage', false, url);
+    emit();
   };
 
   const buttons = [
@@ -61,7 +47,7 @@ function RichTextEditor({ value, onChange, placeholder }) {
     { label: '• List', title: 'Bullet list', fn: () => exec('insertUnorderedList') },
     { label: '1. List', title: 'Numbered list', fn: () => exec('insertOrderedList') },
     { label: '🔗', title: 'Add link', fn: addLink },
-    { label: uploading ? '…' : '🖼', title: 'Insert image', fn: addImage },
+    { label: '🖼', title: 'Insert image by URL', fn: addImageUrl },
     { label: '⌫', title: 'Clear formatting', fn: () => exec('removeFormat') },
   ];
 
@@ -83,7 +69,6 @@ function RichTextEditor({ value, onChange, placeholder }) {
         onBlur={emit}
         data-placeholder={placeholder || 'Write your story…'}
       />
-      <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
     </div>
   );
 }

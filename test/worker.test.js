@@ -1,7 +1,7 @@
 /* Security test suite for worker/index.js (runs with `npm test` / node --test).
  * Covers: Access JWT auth (401/403 matrix), admin route protection, Origin
  * checks, prod localStorage behavior, slug uniqueness, HTML sanitization,
- * URL validation, upload validation, and soft-delete flows. */
+ * URL validation, and soft-delete flows. */
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -186,25 +186,9 @@ function makeDb() {
   };
 }
 
-function makeR2() {
-  const store = new Map();
-  return {
-    store,
-    async put(key, body, opts) {
-      store.set(key, { body: body instanceof ArrayBuffer ? body : new Uint8Array(body).buffer, contentType: opts?.httpMetadata?.contentType });
-    },
-    async get(key) {
-      const v = store.get(key);
-      if (!v) return null;
-      return { body: v.body, httpMetadata: { contentType: v.contentType } };
-    },
-  };
-}
-
 function makeEnv(over = {}) {
   return {
     DB: makeDb(),
-    MEDIA: makeR2(),
     ACCESS_TEAM_DOMAIN: TEAM,
     ACCESS_AUD: AUD,
     ADMIN_EMAILS: ADMIN,
@@ -319,7 +303,7 @@ describe('worker security', () => {
     }
   });
 
-  it('unauthenticated POST/PUT/PATCH/DELETE/upload → 401', async () => {
+  it('unauthenticated POST/PUT/PATCH/DELETE → 401', async () => {
     const env = makeEnv();
     const cases = [
       api('/api/admin/blogs', { method: 'POST', body: { title: 'x' } }),
@@ -329,7 +313,6 @@ describe('worker security', () => {
       api('/api/admin/upcoming', { method: 'POST', body: { title: 'x' } }),
       api('/api/admin/upcoming/abc', { method: 'DELETE' }),
       api('/api/admin/blogs/abc/restore', { method: 'POST' }),
-      api('/api/admin/uploads', { method: 'POST', rawBody: new Uint8Array([1, 2, 3]).buffer, contentType: 'image/png' }),
     ];
     for (const req of cases) {
       const res = await call(req, env);
@@ -368,12 +351,12 @@ describe('worker security', () => {
     const env = makeEnv();
     const t = await token();
     const mk = () => api('/api/admin/blogs', { method: 'POST', body: { title: 'Hello World', content_html: '<p>hi</p>' }, token: t });
-    const r1 = await call(mk(), env);
-    const r2 = await call(mk(), env);
-    assert.equal(r1.status, 201);
-    assert.equal(r2.status, 201);
-    const b1 = await r1.json();
-    const b2 = await r2.json();
+    const res1 = await call(mk(), env);
+    const res2 = await call(mk(), env);
+    assert.equal(res1.status, 201);
+    assert.equal(res2.status, 201);
+    const b1 = await res1.json();
+    const b2 = await res2.json();
     assert.equal(b1.slug, 'hello-world');
     assert.notEqual(b2.slug, 'hello-world');
     assert.match(b2.slug, /^hello-world-/);
@@ -428,45 +411,12 @@ describe('worker security', () => {
     const res = await call(
       api('/api/admin/upcoming', {
         method: 'POST',
-        body: { title: 'P', link_url: 'https://good.example/a', image_url: '/api/media/uploads/x.png' },
+        body: { title: 'P', link_url: 'https://good.example/a', image_url: '/images/IMG1.jpg' },
         token: t,
       }),
       env
     );
     assert.equal(res.status, 201);
-  });
-
-  it('invalid upload bytes → 415; type mismatch → 415', async () => {
-    const env = makeEnv();
-    const t = await token();
-    const text = new TextEncoder().encode('hello, not an image').buffer;
-    const r1 = await call(api('/api/admin/uploads', { method: 'POST', rawBody: text, contentType: 'image/png', token: t }), env);
-    assert.equal(r1.status, 415);
-    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0]).buffer;
-    const r2 = await call(api('/api/admin/uploads', { method: 'POST', rawBody: png, contentType: 'image/jpeg', token: t }), env);
-    assert.equal(r2.status, 415);
-  });
-
-  it('oversized upload → 413', async () => {
-    const env = makeEnv();
-    const t = await token();
-    const big = new Uint8Array(8 * 1024 * 1024 + 1).buffer;
-    const res = await call(api('/api/admin/uploads', { method: 'POST', rawBody: big, contentType: 'image/png', token: t }), env);
-    assert.equal(res.status, 413);
-  });
-
-  it('valid upload → 201 with server-generated key; served under uploads/', async () => {
-    const env = makeEnv();
-    const t = await token();
-    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]).buffer;
-    const res = await call(api('/api/admin/uploads', { method: 'POST', rawBody: png, contentType: 'image/png', token: t }), env);
-    assert.equal(res.status, 201);
-    const data = await res.json();
-    assert.match(data.key, /^uploads\/\d{4}\/\d{2}\/[\w-]+\.png$/);
-    const got = await call(api(`/${data.key}`.replace('/uploads', '/api/media/uploads')), env);
-    assert.equal(got.status, 200);
-    const traversal = await call(api('/api/media/../secret'), env);
-    assert.equal(traversal.status, 404);
   });
 
   it('soft-delete → hidden publicly, restorable, then permanently deletable', async () => {
