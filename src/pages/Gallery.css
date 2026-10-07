@@ -1,0 +1,155 @@
+.gallery-page {
+  min-height: 100vh;
+  background: #1E1716;
+  color: #F5F6F8;
+}
+
+.page-header {
+  padding: 120px 28px 60px;
+  background: linear-gradient(135deg, #1E1716 0%, #3A2D28 100%);
+}
+
+.hero-panel {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4rem;
+}
+
+.hero-copy {
+  flex: 1;
+}
+
+.eyebrow {
+  display: inline-flex;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(254, 213, 49, 0.15);
+  color: rgba(254, 213, 49, 0.75);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(30, 23, 22, 0.1);
+}
+
+.hero-title {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 16px;
+  color: #F5F6F8;
+}
+
+.hero-text {
+  font-size: 1.1rem;
+  color: rgba(245, 246, 248, 0.7);
+  line-height: 1.7;
+  max-width: 500px;
+}
+
+.hero-visual {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 300px;
+}
+
+.hero-shape {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(254, 213, 49, 0.75);
+  opacity: 0.3;
+  filter: blur(40px);
+}
+
+.hero-accent {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(254, 213, 49, 0.75);
+  opacity: 0.2;
+  filter: blur(30px);
+  top: 20%;
+  right: 20%;
+}
+
+.gallery-section {
+  padding: 60px 28px 100px;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.section-title span {
+  display: inline-flex;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(254, 213, 49, 0.1);
+  color: rgba(254, 213, 49, 0.75);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(30, 23, 22, 0.1);
+}
+
+.section-title h2 {
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  font-weight: 700;
+  color: #F5F6F8;
+  letter-spacing: 0.02em;
+}
+
+.carousel-wrapper {
+  height: 500px;
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: 100px 20px 40px;
+  }
+
+  .hero-panel {
+    flex-direction: column;
+    text-align: center;
+    gap: 2rem;
+  }
+
+  .hero-text {
+    margin: 0 auto;
+  }
+
+  .hero-visual {
+    display: none;
+  }
+
+  .gallery-section {
+    padding: 40px 20px 60px;
+  }
+
+  .carousel-wrapper {
+    height: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel-wrapper {
+    height: 320px;
+  }
+
+  .section-title h2 {
+    font-size: 1.5rem;
+  }
+}

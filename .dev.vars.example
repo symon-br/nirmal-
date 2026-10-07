@@ -1,0 +1,5 @@
+# Wrangler development variables template
+# Copy this file to .dev.vars and fill in your values
+
+# Add any development-specific environment variables here
+# These will be available during local development with `wrangler dev`

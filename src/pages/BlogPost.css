@@ -1,0 +1,53 @@
+.post-page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 100px 1.5rem 4rem;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  color: #8a6d00;
+}
+
+[data-theme='dark'] .back-link {
+  color: rgba(254, 213, 49, 0.9);
+}
+
+.post-header h1 {
+  font-size: 2.2rem;
+  line-height: 1.2;
+  margin: 0.5rem 0 0.7rem;
+}
+
+.post-excerpt {
+  font-size: 1.1rem;
+  opacity: 0.8;
+}
+
+.post-cover {
+  width: 100%;
+  border-radius: 1rem;
+  margin: 1.5rem 0;
+}
+
+.post-body {
+  line-height: 1.8;
+  font-size: 1.02rem;
+}
+
+.post-body h2 { font-size: 1.5rem; margin: 1.4em 0 0.5em; }
+.post-body h3 { font-size: 1.25rem; margin: 1.2em 0 0.4em; }
+.post-body p { margin: 0.8em 0; }
+.post-body blockquote {
+  border-left: 3px solid rgba(254, 213, 49, 0.75);
+  margin: 1em 0;
+  padding: 0.4em 0 0.4em 1em;
+  opacity: 0.92;
+}
+.post-body ul, .post-body ol { margin: 0.8em 0 0.8em 1.5em; }
+.post-body ul { list-style: disc; }
+.post-body ol { list-style: decimal; }
+.post-body a { color: #8a6d00; text-decoration: underline; }
+.post-body img { border-radius: 0.75rem; margin: 1em 0; }

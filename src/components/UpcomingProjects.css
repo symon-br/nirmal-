@@ -1,0 +1,143 @@
+.upcoming-section {
+  padding: 4rem 0;
+}
+
+.upcoming-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.upcoming-card {
+  background: #F5F6F8;
+  border: 1px solid rgba(30, 23, 22, 0.1);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(58, 45, 40, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+[data-theme='dark'] .upcoming-card {
+  background: #3A2D28;
+  border-color: rgba(245, 246, 248, 0.1);
+}
+
+.upcoming-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 50px rgba(58, 45, 40, 0.12);
+}
+
+.upcoming-image img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.upcoming-body {
+  padding: 1.25rem;
+}
+
+.upcoming-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.status-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(254, 213, 49, 0.25);
+  color: #3A2D28;
+}
+
+[data-theme='dark'] .status-badge {
+  color: #F5F6F8;
+}
+
+.status-in-progress {
+  background: rgba(254, 213, 49, 0.55);
+}
+
+.status-done {
+  background: rgba(46, 160, 67, 0.2);
+}
+
+.status-paused {
+  background: rgba(30, 23, 22, 0.12);
+}
+
+.upcoming-date {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.upcoming-body h3 {
+  font-size: 1.15rem;
+  margin-bottom: 0.4rem;
+}
+
+.upcoming-desc {
+  font-size: 0.92rem;
+  opacity: 0.85;
+  margin-bottom: 0.7rem;
+}
+
+.upcoming-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 0.7rem;
+}
+
+.upcoming-tags span {
+  font-size: 0.75rem;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(254, 213, 49, 0.18);
+}
+
+.progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0.6rem 0;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(30, 23, 22, 0.12);
+  overflow: hidden;
+}
+
+.progress-bar span {
+  display: block;
+  height: 100%;
+  background: rgba(254, 213, 49, 0.75);
+  border-radius: 999px;
+}
+
+.progress-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.upcoming-link {
+  display: inline-block;
+  margin-top: 0.4rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #8a6d00;
+}
+
+[data-theme='dark'] .upcoming-link {
+  color: rgba(254, 213, 49, 0.9);
+}
