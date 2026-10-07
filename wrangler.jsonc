@@ -1,24 +1,24 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "my-portfolio1",
-  "main": "./worker/index.js",
-  "compatibility_date": "2026-04-07",
-  "compatibility_flags": ["nodejs_compat"],
-  "observability": { "enabled": true },
-  "assets": { "directory": "./dist", "not_found_handling": "single-page-application" },
-  "vars": {
-    "ACCESS_TEAM_DOMAIN": "REPLACE_WITH_TEAM_DOMAIN",
-    "ACCESS_AUD": "REPLACE_WITH_ACCESS_AUD",
-    "ADMIN_EMAILS": "",
-    "DEV_ADMIN_BYPASS": "false"
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "portfolio-db",
-      "database_id": "REPLACE_WITH_D1_ID",
-      "migrations_dir": "migrations"
-    }
-  ],
-  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "portfolio-media" }]
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "my-portfolio1",
+    "main": "./worker/index.js",
+    "compatibility_date": "2026-04-07",
+    "compatibility_flags": ["nodejs_compat"],
+    "observability": { "enabled": true },
+    "assets": { "directory": "./dist", "not_found_handling": "single-page-application" },
+    "vars": {
+        "ACCESS_TEAM_DOMAIN": "REPLACE_WITH_TEAM_DOMAIN",
+        "ACCESS_AUD": "REPLACE_WITH_ACCESS_AUD",
+        "ADMIN_EMAILS": "",
+        "DEV_ADMIN_BYPASS": "false",
+    },
+    "d1_databases": [
+        {
+            "binding": "DB",
+            "database_name": "portfolio-db",
+            "database_id": "6a543336-9331-47ef-b1f8-e19aad0741b9",
+            "migrations_dir": "migrations",
+        },
+    ],
+    "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "portfolio-media" }],
 }
