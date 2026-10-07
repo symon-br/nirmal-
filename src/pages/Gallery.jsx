@@ -6,7 +6,6 @@ const items = [
   { image: '/images/FAV1.jpg', alt: 'Favorite moment' },
   { image: '/images/FAV2.jpg', alt: 'Favorite time' },
   { image: '/images/IMG1.jpg', alt: 'Loving memories - We must learn to live' },
-  { image: '/images/IMG2.jpg', alt: 'Loving memories - Those in my territory' },
   { image: '/images/IMG3.jpg', alt: 'Soft corner - My dear Sister' },
   { image: '/images/IMG4.jpg', alt: 'Soft corner - Friendship' },
   { image: '/images/IMG5.jpg', alt: 'Gallery image 5' },
